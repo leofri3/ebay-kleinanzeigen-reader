@@ -5,6 +5,7 @@ import offer
 
 
 parameters = ['lowest_price', 'highest_price', 'oldest_date', 'newest_date']
+result = []
 
 
 # Prepare search word for url
@@ -14,11 +15,11 @@ def check_search_word(search_word):
 
 
 # String with the html-code from the site
-def get_html(search_word):
+def get_html(search_word, site):
     search_word = check_search_word(search_word)
-    url_request = request.urlopen(
-        "https://www.ebay-kleinanzeigen.de/s-" + search_word + "/k0")
-
+    url_string = "https://www.ebay-kleinanzeigen.de/s-seite:" + str(site) + "/" + search_word + "/k0"
+    url_request = request.urlopen(url_string)
+    print(str(url_string))
     if url_request.code == 200:
         html_content = str(url_request.read()).replace('\\n', '')
 
@@ -35,7 +36,7 @@ def check_date(date_to_check):
 
 
 # List with tuples which contain the title and the price
-def get_title_price(html_content):
+def get_title_and_price(html_content):
     result = []
     soup = BeautifulSoup(html_content, 'html.parser')
 
@@ -47,8 +48,17 @@ def get_title_price(html_content):
         title = str(result_title_incomplete[i].getText())
         price = str(result_price_incomplete[i].getText()).replace(' \\xe2\\x82\\xac', '')
         date = str(result_date_incomplete[i].getText()).replace('                    ', '')
+        link = str(result_title_incomplete[i].get('href'))
         date = check_date(date)
-        result.append(offer.Offer(title, price, date))
+        result.append(offer.Offer(title, price, date, link))
+    return result
+
+
+def search_more_sites(number_sites, search_word):
+    result = []
+    for i in range(0, number_sites):
+        result += get_title_and_price(get_html(search_word, i + 1))
+
     return result
 
 
@@ -66,8 +76,8 @@ def sort_list(content, parameter):
 # Outputs the List with results
 def output(content):
     for entry in content:
-        print('title: ' + entry.title + ' price:' + entry.price + ' date: ' + entry.date)
+        print('title: ' + entry.title + ' price:' + entry.price + ' date: ' + entry.date + ' link: ' + entry.link)
 
 
-result = get_title_price(get_html('oneplus 6t'))
-output(sort_list(result, 'highest_price'))
+result = search_more_sites(10, 'oneplus 6t')
+output(result)
