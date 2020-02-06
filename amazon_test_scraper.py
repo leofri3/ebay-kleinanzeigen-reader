@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 from datetime import date, timedelta
 import offer
 
-
 parameters = ['lowest_price', 'highest_price', 'oldest_date', 'newest_date']
 result = []
 
@@ -26,6 +25,7 @@ def get_html(search_word, site):
     return html_content
 
 
+# formats the date when "Gestern" and "Heute"
 def check_date(date_to_check):
     if 'Heute,' in date_to_check:
         return date.today().__format__('%d.%m.%Y')
@@ -54,6 +54,7 @@ def get_title_and_price(html_content):
     return result
 
 
+# search more sites than one
 def search_more_sites(number_sites, search_word):
     result = []
     for i in range(0, number_sites):
@@ -62,6 +63,7 @@ def search_more_sites(number_sites, search_word):
     return result
 
 
+# Sorting the results
 def sort_list(content, parameter):
     if parameter == 'oldest_date':
         return sorted(content, key=lambda x: x.date)
@@ -79,5 +81,22 @@ def output(content):
         print('title: ' + entry.title + ' price:' + entry.price + ' date: ' + entry.date + ' link: ' + entry.link)
 
 
-result = search_more_sites(10, 'oneplus 6t')
-output(result)
+#menu
+def menu():
+    search_word = input("Enter search:")
+    number_of_sites = input("Enter number of sites:")
+    sort_value = input("Sort for (old, new, low, high, default):")
+    result = search_more_sites(number_of_sites, search_word)
+    if sort_value != 'default':
+        if sort_value == 'old':
+            result = sort_list(result, 'oldest_date')
+        elif sort_value == 'new':
+            result = sort_list(result, 'newest_date')
+        elif sort_value == 'low':
+            result = sort_list(result, 'lowest_price')
+        elif sort_value == 'high':
+            result = sort_list(result, 'highest_price')
+    output(result)
+
+
+menu()
